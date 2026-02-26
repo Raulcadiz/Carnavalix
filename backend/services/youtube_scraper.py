@@ -14,6 +14,7 @@ from typing import Optional
 
 # Invocar yt-dlp a través del intérprete activo para evitar problemas de PATH en Windows
 _YTDLP = [sys.executable, "-m", "yt_dlp"]
+_YTDLP_PLAYER = ["--extractor-args", "youtube:player_client=android,web"]
 
 try:
     from googleapiclient.discovery import build
@@ -190,7 +191,7 @@ def metadatos_ytdlp(youtube_id: str) -> Optional[dict]:
     url = f"https://www.youtube.com/watch?v={youtube_id}"
     try:
         result = subprocess.run(
-            _YTDLP + [
+            _YTDLP + _YTDLP_PLAYER + [
                 "--dump-json",
                 "--no-playlist",
                 "--skip-download",
@@ -290,7 +291,7 @@ def _buscar_videos_ytdlp(query: str, max_results: int = 20) -> list:
     """Busca videos en YouTube usando yt-dlp (ytsearch)."""
     try:
         result = subprocess.run(
-            _YTDLP + [
+            _YTDLP + _YTDLP_PLAYER + [
                 f"ytsearch{max_results}:{query}",
                 "--dump-json",
                 "--no-playlist",
@@ -392,7 +393,7 @@ def scrapear_canal_coac(channel_url: str, max_videos: int = 200) -> dict:
 
     try:
         result = subprocess.run(
-            _YTDLP + [
+            _YTDLP + _YTDLP_PLAYER + [
                 channel_url,
                 "--dump-json",
                 "--flat-playlist",

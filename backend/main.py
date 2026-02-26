@@ -72,6 +72,10 @@ def create_app() -> Flask:
     def audios():
         return render_template("audios.html")
 
+    @app.route("/letras")
+    def letras_page():
+        return render_template("letras.html")
+
     # SocketIO
     socketio.init_app(app)
     from backend.routes import chat as chat_events  # noqa: F401

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Letras — Carnaval de Cádiz{% endblock %}
+
+{% block content %}
+<div class="letras-page">
+
+  <!-- Cabecera -->
+  <div class="letras-page-header">
+    <h1>📜 Letras del Carnaval</h1>
+    <p>Coplas, pasodobles, cuplés y más de 17.000 letras del COAC</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="letras-filtros" style="padding:0 48px 20px">
+    <input type="text" id="letrasQ" class="letras-search"
+           placeholder="🔍 Buscar copla, grupo, autor..." autocomplete="off" />
+    <select id="letrasAño">
+      <option value="">Todos los años</option>
+    </select>
+    <select id="letrasTipo">
+      <option value="">Todos los tipos</option>
+      <option value="presentacion">Presentación</option>
+      <option value="pasodoble">Pasodoble</option>
+      <option value="cuple">Cuplé</option>
+      <option value="estribillo">Estribillo</option>
+      <option value="popurri">Popurrí</option>
+      <option value="romance">Romance</option>
+    </select>
+    <button class="btn-filtrar" id="btnBuscarLetras">Buscar</button>
+  </div>
+
+  <!-- Grid de letras -->
+  <div class="grid-letras" id="gridLetras" style="padding:0 48px 40px">
+    <div class="loading-state"><div class="spinner"></div><p>Cargando letras...</p></div>
+  </div>
+
+  <!-- Paginación -->
+  <div class="paginacion" id="paginacionLetras" style="display:none">
+    <button class="btn-pag" id="btnLetrasAnterior">← Anterior</button>
+    <span id="infoLetrasPagina">Página 1</span>
+    <button class="btn-pag" id="btnLetrasSiguiente">Siguiente →</button>
+  </div>
+
+</div>
+
+<!-- Modal: letra completa -->
+<div id="letraModal" class="letra-modal-overlay" style="display:none">
+  <div class="letra-modal-box">
+    <button class="letra-modal-close" id="btnCerrarLetra">✕</button>
+    <div class="letra-modal-header">
+      <span class="letra-modal-tipo" id="letraModalTipo"></span>
+      <span class="letra-modal-año" id="letraModalAño"></span>
+    </div>
+    <h2 class="letra-modal-titulo" id="letraModalTitulo"></h2>
+    <p class="letra-modal-grupo" id="letraModalGrupo"></p>
+    <div class="letra-modal-contenido" id="letraModalContenido"></div>
+  </div>
+</div>
+
+<!-- Template tarjeta de letra -->
+<template id="letraTemplate">
+  <article class="letra-card">
+    <div class="letra-card-top">
+      <span class="letra-card-tipo"></span>
+      <span class="letra-card-año"></span>
+    </div>
+    <h3 class="letra-card-titulo"></h3>
+    <p class="letra-card-grupo"></p>
+    <p class="letra-card-preview"></p>
+    <button class="btn-ver-letra">📜 Leer completa</button>
+  </article>
+</template>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/letras.js"></script>
+{% endblock %}

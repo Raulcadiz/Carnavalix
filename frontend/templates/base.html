@@ -32,7 +32,8 @@
       <span class="nav-live-dot"></span>Live
     </a>
     <a href="/audios" class="nav-link {% if request.path.startswith('/audios') %}active{% endif %}">🎵 Audios</a>
-    <a href="/chat" class="nav-link">Chat</a>
+    <a href="/letras" class="nav-link {% if request.path.startswith('/letras') %}active{% endif %}">📜 Letras</a>
+    <a href="/chat" class="nav-link {% if request.path.startswith('/chat') %}active{% endif %}">Chat</a>
   </div>
 
   <div class="navbar-actions">

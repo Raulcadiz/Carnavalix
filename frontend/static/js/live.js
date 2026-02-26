@@ -2,11 +2,15 @@
    Carnavalix — Canal Live 24/7
    Usa iframe estático (igual que player.html) para máxima compatibilidad.
    Sincroniza con el servidor cada 30 s actualizando el src del iframe.
+   Socket.io propio: NO depende de chat.js (que es para /chat).
    ══════════════════════════════════════════════════════════════════ */
 
 let _estadoActual = null;
 let _syncInterval = null;
 const SYNC_INTERVAL_MS = 30000; // sincronizar cada 30 segundos
+
+// Socket propio para el live (no comparte con /chat)
+const _socket = io({ transports: ["websocket", "polling"] });
 
 document.addEventListener("DOMContentLoaded", iniciarLive);
 
@@ -101,13 +105,7 @@ function mostrarError(msg) {
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
 function iniciarChat(sala) {
-  if (typeof CP === "undefined" || !CP.socket) {
-    // socket.io no inicializado aún, reintentamos
-    setTimeout(() => iniciarChat(sala), 500);
-    return;
-  }
-
-  // Historial
+  // Cargar historial de la sala live
   fetch(`/api/chat/historial?sala=${sala}&limit=50`)
     .then(r => r.json())
     .then(msgs => {
@@ -116,17 +114,22 @@ function iniciarChat(sala) {
     })
     .catch(() => {});
 
-  // Unirse a la sala
-  CP.socket.emit("unirse", { sala, nombre: obtenerNombreChat() });
+  // Unirse a la sala cuando el socket conecte (o ya está conectado)
+  const unirse = () => _socket.emit("unirse", { sala, nombre: obtenerNombreChat() });
+  if (_socket.connected) {
+    unirse();
+  } else {
+    _socket.once("connect", unirse);
+  }
 
   // Escuchar mensajes nuevos
-  CP.socket.on("mensaje", (msg) => {
+  _socket.on("mensaje", (msg) => {
     if (msg.sala === sala || !msg.sala) añadirMensaje(msg);
   });
-  CP.socket.on("sistema", (d) => añadirSistema(d.mensaje));
+  _socket.on("sistema", (d) => añadirSistema(d.mensaje));
 
-  // El servidor cambió el vídeo → sincronizar
-  CP.socket.on("live_cambio", () => {
+  // El servidor cambió el vídeo → sincronizar player
+  _socket.on("live_cambio", () => {
     sincronizarEstado();
   });
 
@@ -136,7 +139,7 @@ function iniciarChat(sala) {
   const enviar = () => {
     const txt = input?.value.trim();
     if (!txt) return;
-    CP.socket.emit("mensaje", { sala, contenido: txt, usuario: obtenerNombreChat() });
+    _socket.emit("mensaje", { sala, contenido: txt, usuario: obtenerNombreChat() });
     if (input) input.value = "";
   };
   btn?.addEventListener("click", enviar);
@@ -204,5 +207,9 @@ function escHtml(s) {
 // ── Botón admin: siguiente vídeo ──────────────────────────────────────────────
 document.getElementById("btnLiveSiguientePub")?.addEventListener("click", async () => {
   await fetch("/live/siguiente", { method: "POST" });
-  setTimeout(sincronizarEstado, 1000);
+  setTimeout(sincronizarEstado, 1500);
 });
+
+// Indicador de conexión (opcional debug)
+_socket.on("connect",    () => console.log("[Live] Socket conectado:", _socket.id));
+_socket.on("disconnect", () => console.log("[Live] Socket desconectado"));
