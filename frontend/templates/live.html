@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Live 24/7{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/live.css"/>
+{% endblock %}
+
+{% block content %}
+<div class="live-layout">
+
+  <!-- Player principal -->
+  <div class="live-player-wrap">
+    <div class="live-header">
+      <span class="live-badge">🔴 EN DIRECTO</span>
+      <span class="live-canal" id="liveCanal">ONDACADIZCARNAVAL</span>
+    </div>
+    <div class="live-embed-wrap" id="liveEmbedWrap">
+      <iframe
+        id="livePlayer"
+        src=""
+        allow="autoplay; accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allowfullscreen
+        frameborder="0"
+        title="Canal Live 24/7"
+      ></iframe>
+      <div class="live-loading" id="liveLoading">
+        <div class="spinner"></div>
+        <p>Cargando canal...</p>
+      </div>
+    </div>
+    <div class="live-info">
+      <h2 class="live-titulo" id="liveTituloActual">Cargando...</h2>
+      <div class="live-meta">
+        <span id="liveViewers">👥 1 espectador</span>
+        <span class="live-sep">·</span>
+        <button class="btn-live-next" id="btnLiveSiguientePub" style="display:none">⏭ Siguiente (admin)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat lateral -->
+  <div class="live-chat">
+    <div class="chat-header">
+      <span>💬 Chat del Carnaval</span>
+      <span class="chat-sala">#live</span>
+    </div>
+
+    <div class="chat-mensajes" id="chatMensajes">
+      <!-- mensajes dinámicos -->
+    </div>
+
+    <div class="chat-input-wrap" id="chatInputWrap">
+      <div class="chat-usuario-info" id="chatUsuarioInfo" style="display:none">
+        <span id="chatAvatarEmoji"></span>
+        <span id="chatNombreVisible"></span>
+      </div>
+      <div class="chat-anonimo-info" id="chatAnonimoInfo">
+        <a href="/login" class="chat-login-link">Inicia sesión</a> para chatear con tu nombre ·
+        <input type="text" id="chatNombreAnonimo" placeholder="Tu nombre (anónimo)" maxlength="30" style="max-width:130px"/>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Escribe un mensaje..." maxlength="300" autocomplete="off"/>
+        <button class="btn-chat-send" id="btnChatSend">➤</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/chat.js"></script>
+<script src="/static/js/live.js"></script>
+{% endblock %}

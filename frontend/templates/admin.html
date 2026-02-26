@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin · Carnavalix</title>
+  <link rel="stylesheet" href="/static/css/main.css"/>
+  <link rel="stylesheet" href="/static/css/admin.css"/>
+</head>
+<body class="admin-body">
+
+<nav class="admin-nav">
+  <a href="/" class="brand">🎭 Carnavalix</a>
+  <span class="admin-label">Panel de Administración</span>
+  <a href="/" class="btn-volver">← Volver a la plataforma</a>
+</nav>
+
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <button class="admin-tab-btn active" data-panel="estadisticas">📊 Estadísticas</button>
+    <button class="admin-tab-btn" data-panel="scraper">🔍 Scraper YouTube</button>
+    <button class="admin-tab-btn" data-panel="videos">🎬 Gestión Vídeos</button>
+    <button class="admin-tab-btn" data-panel="letras">📜 Importar Letras</button>
+    <button class="admin-tab-btn" data-panel="live">📡 Live 24/7</button>
+    <button class="admin-tab-btn" data-panel="odysee">☁️ Backup Odysee</button>
+    <button class="admin-tab-btn" data-panel="config">⚙️ Configuración</button>
+  </aside>
+
+  <!-- Paneles -->
+  <main class="admin-main">
+
+    <!-- Estadísticas -->
+    <section class="admin-panel active" id="panel-estadisticas">
+      <h2>📊 Estadísticas del catálogo</h2>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><span class="stat-num" id="statVideos">-</span><span class="stat-label">Vídeos</span></div>
+        <div class="stat-card"><span class="stat-num" id="statLetras">-</span><span class="stat-label">Letras</span></div>
+        <div class="stat-card"><span class="stat-num" id="statGrupos">-</span><span class="stat-label">Grupos</span></div>
+        <div class="stat-card"><span class="stat-num" id="statConLetra">-</span><span class="stat-label">Con letra</span></div>
+      </div>
+    </section>
+
+    <!-- Scraper YouTube -->
+    <section class="admin-panel" id="panel-scraper">
+      <h2>🔍 Scraper YouTube</h2>
+
+      <!-- Modo de scraping -->
+      <div class="form-group">
+        <label>Modo de scraping</label>
+        <div class="radio-group">
+          <label><input type="radio" name="scraperModo" value="busqueda" checked> 🔎 Por búsqueda (COAC + años)</label>
+          <label><input type="radio" name="scraperModo" value="canal"> 📺 Por URL de canal</label>
+        </div>
+      </div>
+
+      <!-- Sección búsqueda -->
+      <div id="scraperSeccionBusqueda">
+        <p class="admin-desc">Busca vídeos COAC usando los términos de búsqueda configurados. Usa la cuota gratuita de la API (10.000 ud/día) o yt-dlp sin cuota.</p>
+        <div class="form-group">
+          <label>Años a scrapear (separados por coma, o vacío = todos)</label>
+          <input type="text" id="scraperAños" placeholder="2023, 2024, 2025" />
+        </div>
+        <div class="form-group">
+          <label>Modalidades</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="chirigota" checked> Chirigota</label>
+            <label><input type="checkbox" value="comparsa" checked> Comparsa</label>
+            <label><input type="checkbox" value="coro" checked> Coro</label>
+            <label><input type="checkbox" value="cuarteto" checked> Cuarteto</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="scraperForzarYtdlp"> Forzar yt-dlp (sin cuota API, más lento)</label>
+        </div>
+      </div>
+
+      <!-- Sección canal -->
+      <div id="scraperSeccionCanal" style="display:none">
+        <p class="admin-desc">Scracea todos los vídeos de un canal de YouTube usando yt-dlp. No consume cuota de API. Ejemplos de canales COAC:<br/>
+          <code>https://www.youtube.com/@ONDACADIZCARNAVAL</code><br/>
+          <code>https://www.youtube.com/@CanalSurAndalucia</code>
+        </p>
+        <div class="form-group">
+          <label>URL del canal de YouTube</label>
+          <input type="url" id="scraperCanalUrl" placeholder="https://www.youtube.com/@ONDACADIZCARNAVAL" />
+        </div>
+        <div class="form-group">
+          <label>Máximo de vídeos a scrapear</label>
+          <input type="number" id="scraperMaxVideos" value="200" min="10" max="2000" style="max-width:120px"/>
+        </div>
+      </div>
+
+      <button class="btn-admin-primary" id="btnLanzarScraper">▶ Lanzar scraper</button>
+      <div class="admin-log" id="scraperLog"></div>
+    </section>
+
+    <!-- Gestión Vídeos -->
+    <section class="admin-panel" id="panel-videos">
+      <h2>🎬 Añadir vídeo manual</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>YouTube ID o URL completa</label>
+          <input type="text" id="manualYtId" placeholder="8FKb8TbO8mI  o  https://youtube.com/watch?v=..." style="min-width:300px"/>
+        </div>
+        <div class="form-group">
+          <label>Año</label>
+          <input type="number" id="manualAño" min="1990" max="2030" placeholder="2025" />
+        </div>
+        <div class="form-group">
+          <label>Modalidad</label>
+          <select id="manualModalidad">
+            <option value="">-- Detectar automático --</option>
+            <option value="chirigota">Chirigota</option>
+            <option value="comparsa">Comparsa</option>
+            <option value="coro">Coro</option>
+            <option value="cuarteto">Cuarteto</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fase</label>
+          <select id="manualFase">
+            <option value="">-- Detectar automático --</option>
+            <option value="final">Final</option>
+            <option value="semifinal">Semifinal</option>
+            <option value="cuartos">Cuartos</option>
+            <option value="preliminar">Preliminar</option>
+            <option value="callejera">Callejera</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nombre del grupo</label>
+          <input type="text" id="manualGrupo" placeholder="Nombre del grupo" />
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="manualDestacado"> Destacado en portada</label>
+        </div>
+      </div>
+      <button class="btn-admin-primary" id="btnAñadirVideo">➕ Añadir vídeo</button>
+      <div class="admin-log" id="videoLog"></div>
+    </section>
+
+    <!-- Importar Letras desde API -->
+    <section class="admin-panel" id="panel-letras">
+      <h2>📜 Importar letras desde Carnaval-Letras</h2>
+      <p class="admin-desc">
+        Conecta directamente con <strong>g3v3r.pythonanywhere.com</strong> y descarga las
+        17.709 letras sin necesidad de archivos locales.<br/>
+        <strong>Fase 1</strong> (rápida, ~6 min): importa metadata de todas las letras.<br/>
+        El contenido completo se descarga automáticamente cuando se visualiza cada letra.
+      </p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Año (vacío = todos)</label>
+          <input type="number" id="letrasAnio" min="1980" max="2025" placeholder="Ej: 2024" />
+        </div>
+        <div class="form-group">
+          <label>Modalidad (vacío = todas)</label>
+          <select id="letrasModalidad">
+            <option value="">Todas</option>
+            <option value="Chirigota">Chirigota</option>
+            <option value="Comparsa">Comparsa</option>
+            <option value="Coro">Coro</option>
+            <option value="Cuarteto">Cuarteto</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Calidad mínima (0-100)</label>
+          <input type="number" id="letrasCalidad" min="0" max="100" value="0" />
+        </div>
+        <div class="form-group">
+          <label>Límite máximo</label>
+          <input type="number" id="letrasLimite" min="100" max="20000" value="20000" />
+        </div>
+      </div>
+
+      <div class="letras-botones">
+        <button class="btn-admin-primary" id="btnImportarLetras">📥 Importar metadata (Fase 1)</button>
+        <button class="btn-admin-secondary" id="btnEnriquecerLetras">📝 Descargar contenidos (Fase 2)</button>
+        <button class="btn-admin-stop" id="btnDetenerImport" style="display:none">⏹ Detener</button>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="progreso-wrap" id="progresoWrap" style="display:none">
+        <div class="progreso-header">
+          <span id="progresoFase"></span>
+          <span id="progresoNums"></span>
+        </div>
+        <div class="progreso-bar-bg">
+          <div class="progreso-bar-fill" id="progresoFill" style="width:0%"></div>
+        </div>
+        <div class="progreso-msg" id="progresoMsg"></div>
+      </div>
+
+      <div class="admin-log" id="letrasLog"></div>
+
+      <div class="letras-enriquecer-desc admin-desc" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+        <strong>Fase 2 — Descargar contenidos:</strong> descarga el texto completo de las letras importadas.
+        Es un proceso lento (1 letra/seg). Puedes hacerlo en lotes pequeños y pausarlo cuando quieras.
+        <div class="form-group" style="margin-top:10px">
+          <label>Letras a enriquecer por lote</label>
+          <input type="number" id="enriquecerLimite" min="10" max="1000" value="200" style="max-width:120px" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Live 24/7 -->
+    <section class="admin-panel" id="panel-live">
+      <h2>📡 Canal Live 24/7</h2>
+      <p class="admin-desc">Gestiona el canal de reproducción continua. El canal reproduce vídeos de finales y semifinales de forma aleatoria y todos los usuarios ven el mismo vídeo en el mismo punto.</p>
+
+      <div id="liveEstadoActual" class="live-estado-card">
+        <span class="live-dot" id="liveDot"></span>
+        <div>
+          <strong id="liveTitulo">Cargando...</strong><br/>
+          <small id="liveYtId" style="color:var(--text-muted)"></small>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top:16px">
+        <div class="form-group">
+          <label>Programar vídeo específico (YouTube ID)</label>
+          <input type="text" id="liveYtIdInput" placeholder="dQw4w9WgXcQ" style="max-width:220px"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn-admin-primary" id="btnLiveSiguiente">⏭ Siguiente vídeo (aleatorio)</button>
+        <button class="btn-admin-secondary" id="btnLiveProgramar">📌 Programar vídeo específico</button>
+      </div>
+      <div class="admin-log" id="liveLog"></div>
+    </section>
+
+    <!-- Backup Odysee -->
+    <section class="admin-panel" id="panel-odysee">
+      <h2>☁️ Backup en Odysee</h2>
+      <p class="admin-desc">Publica los vídeos aún sin backup en Odysee. Configura tus credenciales en el archivo <code>.env</code>.</p>
+      <div class="form-group">
+        <label>Número máximo de vídeos a subir ahora</label>
+        <input type="number" id="odyseeLimit" value="10" min="1" max="50" />
+      </div>
+      <button class="btn-admin-primary" id="btnSincronizarOdysee">☁️ Sincronizar con Odysee</button>
+      <div class="admin-log" id="odyseeLog"></div>
+    </section>
+
+    <!-- Configuración -->
+    <section class="admin-panel" id="panel-config">
+      <h2>⚙️ Configuración dinámica</h2>
+      <div class="admin-desc">
+        Edita el archivo <code>.env</code> para configurar las API keys. Reinicia el servidor tras guardar.
+      </div>
+      <div class="config-info">
+        <code>YOUTUBE_API_KEY</code> — Clave de YouTube Data API v3<br/>
+        <code>GROQ_API_KEY</code> — Clave de Groq para el chatbot<br/>
+        <code>ODYSEE_EMAIL</code> / <code>ODYSEE_PASSWORD</code> — Credenciales de Odysee<br/>
+        <code>SECRET_KEY</code> — Clave secreta de Flask<br/>
+        <code>DEBUG</code> — true/false
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/js/main.js"></script>
+<script src="/static/js/admin.js"></script>
+</body>
+</html>

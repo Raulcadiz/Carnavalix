@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card auth-card-wide">
+    <div class="auth-logo">🎭</div>
+    <h1 class="auth-titulo">Unirse a Carnavalix</h1>
+    <p class="auth-subtitulo">Crea tu cuenta gratuita y únete al chat del Carnaval</p>
+
+    <form class="auth-form" id="registroForm" autocomplete="on">
+
+      <div class="auth-avatar-picker">
+        <label>Elige tu avatar</label>
+        <div class="emoji-grid" id="emojiGrid">
+          {% for emoji in ["🎭","🎪","🎶","🦁","🎨","🎸","🦜","🌟","🔥","🎯","🎺","🎻","🥁","🎤","👑"] %}
+          <button type="button" class="emoji-btn {% if loop.first %}selected{% endif %}" data-emoji="{{ emoji }}">{{ emoji }}</button>
+          {% endfor %}
+        </div>
+        <input type="hidden" id="avatarEmoji" value="🎭" />
+        <div class="color-picker-wrap">
+          <label>Color</label>
+          <input type="color" id="avatarColor" value="#d4a843" />
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label for="username">Nombre de usuario <span class="auth-hint">(3-30 caracteres, sin espacios)</span></label>
+        <input type="text" id="username" name="username" placeholder="aficionado_coac" autocomplete="username" required pattern="[a-zA-Z0-9_\-\.]{3,30}" />
+      </div>
+      <div class="auth-field">
+        <label for="displayName">Nombre visible en el chat <span class="auth-hint">(opcional)</span></label>
+        <input type="text" id="displayName" name="displayName" placeholder="Pepe el del Falla" maxlength="80" autocomplete="nickname" />
+      </div>
+      <div class="auth-field">
+        <label for="password">Contraseña <span class="auth-hint">(mínimo 6 caracteres)</span></label>
+        <div class="auth-pass-wrap">
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="new-password" required minlength="6" />
+          <button type="button" class="btn-ver-pass" id="btnVerPass" tabindex="-1">👁</button>
+        </div>
+      </div>
+
+      <div class="auth-error" id="registroError" style="display:none"></div>
+      <button type="submit" class="btn-auth-primary" id="btnRegistro">Crear cuenta</button>
+    </form>
+
+    <div class="auth-divider">¿Ya tienes cuenta?</div>
+    <a href="/login" class="btn-auth-secondary">Iniciar sesión</a>
+    <a href="/" class="auth-skip">Continuar sin cuenta →</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Selector de emojis
+document.querySelectorAll(".emoji-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".emoji-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    document.getElementById("avatarEmoji").value = btn.dataset.emoji;
+  });
+});
+
+document.getElementById("btnVerPass").addEventListener("click", () => {
+  const inp = document.getElementById("password");
+  inp.type = inp.type === "password" ? "text" : "password";
+});
+
+document.getElementById("registroForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("btnRegistro");
+  const errEl = document.getElementById("registroError");
+  btn.disabled = true;
+  btn.textContent = "Creando cuenta...";
+  errEl.style.display = "none";
+
+  try {
+    const res = await fetch("/api/auth/registro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: document.getElementById("username").value.trim(),
+        password: document.getElementById("password").value,
+        display_name: document.getElementById("displayName").value.trim() || null,
+        avatar_emoji: document.getElementById("avatarEmoji").value,
+        avatar_color: document.getElementById("avatarColor").value,
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      window.location.href = "/";
+    } else {
+      errEl.textContent = data.error || "Error al registrarse";
+      errEl.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "Crear cuenta";
+    }
+  } catch {
+    errEl.textContent = "Error de conexión";
+    errEl.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Crear cuenta";
+  }
+});
+</script>
+{% endblock %}

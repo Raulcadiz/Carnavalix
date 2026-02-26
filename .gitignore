@@ -1,0 +1,22 @@
+# ── Secretos — NUNCA subir a GitHub ─────────
+.env
+*.env
+
+# ── Python ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# ── Base de datos ─────────────────────────────
+data/*.db
+data/*.sqlite
+
+# ── Editores / OS ─────────────────────────────
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store

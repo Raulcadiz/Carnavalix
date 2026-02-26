@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Reproduciendo{% endblock %}
+
+{% block content %}
+<div class="player-layout" id="playerLayout">
+
+  <!-- ── Panel izquierdo: reproductor ──────────────────────────────────── -->
+  <div class="player-main">
+    <div class="video-wrapper">
+      <iframe
+        id="ytPlayer"
+        src="https://www.youtube.com/embed/{{ youtube_id }}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1"
+        allow="autoplay; accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allowfullscreen
+        frameborder="0"
+        title="Reproductor"
+      ></iframe>
+    </div>
+    <!-- Enlace de respaldo si el vídeo no se puede reproducir aquí -->
+    <div class="yt-fallback" style="text-align:center;padding:8px;font-size:13px;color:#666">
+      ¿No se reproduce? →
+      <a href="https://www.youtube.com/watch?v={{ youtube_id }}" target="_blank" rel="noopener"
+         style="color:#d4a843;text-decoration:underline">Ver en YouTube ↗</a>
+    </div>
+
+    <div class="player-info" id="playerInfo">
+      <div class="player-title-row">
+        <h1 class="player-titulo" id="playerTitulo">Cargando...</h1>
+        <div class="player-actions">
+          <button class="btn-icon btn-fav" id="btnFav" title="Favorito" aria-label="Añadir a favoritos">♡</button>
+          <button class="btn-icon btn-share" id="btnShare" title="Compartir" aria-label="Compartir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="player-meta" id="playerMeta">
+        <span class="badge badge-año" id="metaAño"></span>
+        <span class="badge badge-modalidad" id="metaModalidad"></span>
+        <span class="badge badge-fase" id="metaFase"></span>
+        <span class="badge badge-grupo" id="metaGrupo"></span>
+      </div>
+
+      <!-- Valoración -->
+      <div class="player-rating" id="playerRating">
+        <span class="rating-label">Tu valoración:</span>
+        <div class="stars" id="starsInput" data-video-id="">
+          <span class="star" data-val="1">★</span>
+          <span class="star" data-val="2">★</span>
+          <span class="star" data-val="3">★</span>
+          <span class="star" data-val="4">★</span>
+          <span class="star" data-val="5">★</span>
+        </div>
+        <span class="rating-media" id="ratingMedia"></span>
+      </div>
+
+      <!-- Odysee backup -->
+      <div class="player-odysee" id="playerOdysee" style="display:none">
+        <a id="odyseeLink" href="#" target="_blank" rel="noopener">
+          Ver backup en Odysee →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel derecho: letras ─────────────────────────────────────────── -->
+  <aside class="player-letras" id="playerLetrasPanel">
+    <div class="letras-header">
+      <h2>📜 Letras</h2>
+      <button class="btn-icon" id="btnToggleLetras" title="Ocultar letras">✕</button>
+    </div>
+    <div class="letras-tabs" id="letrasTabs">
+      <!-- Tabs por tipo de pieza: presentación, pasodoble, cuplé... -->
+    </div>
+    <div class="letras-body" id="letrasBody">
+      <div class="letras-empty">Sin letras disponibles para este vídeo.<br/>
+        <small>Puedes añadirlas desde el panel de administración.</small>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ── Vídeos relacionados ───────────────────────────────────────────────── -->
+<section class="relacionados">
+  <h2>Más de esta modalidad</h2>
+  <div class="relacionados-grid" id="relacionadosGrid">
+    <div class="spinner"></div>
+  </div>
+</section>
+
+<script>
+  // Pasar youtube_id al script
+  window.YOUTUBE_ID = "{{ youtube_id }}";
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/player.js"></script>
+{% endblock %}

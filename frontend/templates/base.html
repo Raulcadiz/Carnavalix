@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="Carnavalix — El Netflix del Carnaval de Cádiz. COAC por años, finales, callejeras y mucho más." />
+  <title>{% block title %}Carnavalix{% endblock %} · Carnavalix</title>
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="icon" href="/static/img/favicon.ico" />
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="/static/css/main.css" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navbar ───────────────────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <a href="/" class="navbar-brand">
+    <span class="brand-icon">🎭</span>
+    <span class="brand-name">Carnavalix</span>
+  </a>
+
+  <div class="navbar-links">
+    <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Inicio</a>
+    <a href="/?tipo=coac" class="nav-link">COAC</a>
+    <a href="/?tipo=callejera" class="nav-link">Callejeras</a>
+    <a href="/live" class="nav-link {% if request.path.startswith('/live') %}active{% endif %}">
+      <span class="nav-live-dot"></span>Live
+    </a>
+    <a href="/audios" class="nav-link {% if request.path.startswith('/audios') %}active{% endif %}">🎵 Audios</a>
+    <a href="/chat" class="nav-link">Chat</a>
+  </div>
+
+  <div class="navbar-actions">
+    <button class="btn-icon" id="btnBuscar" title="Buscar" aria-label="Buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+    <button class="btn-icon btn-shuffle" id="btnShuffle" title="Modo aleatorio" aria-label="Aleatorio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+        <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+      </svg>
+    </button>
+    <!-- Auth: usuario o botón de login -->
+    <div class="navbar-auth" id="navbarAuth">
+      <a href="/login" class="btn-nav-login" id="btnNavLogin">Entrar</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Barra de búsqueda desplegable ────────────────────────────────────── -->
+<div class="search-bar" id="searchBar">
+  <input type="text" id="searchInput" placeholder="Buscar chirigota, comparsa, letra, año..." autocomplete="off" />
+</div>
+
+<!-- ── Contenido principal ──────────────────────────────────────────────── -->
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <p>
+    🎭 <strong>Carnavalix</strong> — Preservando el patrimonio del Carnaval de Cádiz
+    &nbsp;|&nbsp;
+    Contenido vía YouTube API &amp; Carnaval-Letras
+  </p>
+</footer>
+
+<!-- Scripts globales -->
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+
+<script>
+// Actualizar navbar con estado de auth
+(async () => {
+  try {
+    const r = await fetch("/api/auth/yo");
+    const d = await r.json();
+    const authDiv = document.getElementById("navbarAuth");
+    if (!authDiv) return;
+    if (d.autenticado && d.usuario) {
+      const u = d.usuario;
+      authDiv.innerHTML = `
+        <a href="/perfil" class="navbar-avatar" title="${u.display_name}" style="background:${u.avatar_color}">
+          ${u.avatar_emoji}
+        </a>`;
+    }
+  } catch {}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Chat 24/7{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/chat.css" />
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+  <aside class="chat-sidebar">
+    <div class="sidebar-header">
+      <h2>🎭 Carnavalix Chat</h2>
+      <span class="online-badge" id="onlineBadge">● En línea</span>
+    </div>
+
+    <div class="chat-rooms">
+      <h3>Salas</h3>
+      <button class="room-btn active" data-sala="general">💬 General</button>
+      <button class="room-btn" data-sala="coac2025">🏆 COAC 2025</button>
+      <button class="room-btn" data-sala="letras">📜 Letras</button>
+      <button class="room-btn" data-sala="callejeras">🎪 Callejeras</button>
+    </div>
+
+    <div class="chat-bot-info">
+      <h3>Bot Carnaval 🤖</h3>
+      <p>El bot manda letras y vídeos aleatorios cada 5 minutos. ¡Nunca sabes lo que llega!</p>
+    </div>
+
+    <!-- Formulario de nombre -->
+    <div class="chat-identidad">
+      <label for="inputNombre">Tu nombre</label>
+      <input type="text" id="inputNombre" maxlength="30" placeholder="Anónimo" />
+    </div>
+  </aside>
+
+  <!-- ── Área principal ────────────────────────────────────────────────── -->
+  <div class="chat-main">
+    <div class="chat-header">
+      <span class="chat-sala-nombre" id="chatSalaNombre"># general</span>
+      <span class="chat-info">Chat en tiempo real · Bot activo 24/7</span>
+    </div>
+
+    <div class="chat-mensajes" id="chatMensajes">
+      <!-- Mensajes renderizados dinámicamente -->
+      <div class="chat-welcome">
+        <p>¡Bienvenido al chat del Carnaval! 🎭</p>
+        <p>Aquí puedes hablar sobre el COAC, pedir letras y compartir tus agrupaciones favoritas.</p>
+      </div>
+    </div>
+
+    <form class="chat-input-area" id="chatForm" autocomplete="off">
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="Escribe un mensaje... (Intro para enviar)"
+        maxlength="500"
+        autocomplete="off"
+      />
+      <button type="submit" class="btn-enviar" aria-label="Enviar">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<!-- ── Plantillas de mensajes ────────────────────────────────────────────── -->
+<template id="msgUserTemplate">
+  <div class="mensaje mensaje-user">
+    <div class="msg-header">
+      <span class="msg-autor"></span>
+      <span class="msg-hora"></span>
+    </div>
+    <div class="msg-contenido"></div>
+  </div>
+</template>
+
+<template id="msgBotTemplate">
+  <div class="mensaje mensaje-bot">
+    <div class="msg-header">
+      <span class="msg-autor">🎭 Bot Carnaval</span>
+      <span class="msg-hora"></span>
+    </div>
+    <div class="msg-contenido"></div>
+  </div>
+</template>
+
+<template id="msgSistemaTemplate">
+  <div class="mensaje mensaje-sistema">
+    <span class="msg-contenido"></span>
+  </div>
+</template>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/static/js/chat.js"></script>
+{% endblock %}

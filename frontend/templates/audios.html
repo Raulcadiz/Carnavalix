@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Audios — Carnaval de Cádiz{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/audios.css"/>
+{% endblock %}
+
+{% block content %}
+
+<div class="audios-layout">
+
+  <!-- ── Sidebar: modalidades y grupos ───────────────────────────── -->
+  <aside class="audios-sidebar">
+    <div class="sidebar-header">🎵 Colección de Audio</div>
+    <div class="sidebar-loading" id="sidebarLoading">
+      <div class="spinner"></div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- Relleno dinámico -->
+    </nav>
+  </aside>
+
+  <!-- ── Contenido: lista de pistas ─────────────────────────────── -->
+  <main class="audios-main">
+
+    <div class="tracks-empty" id="tracksEmpty">
+      <div class="tracks-empty-icon">🎵</div>
+      <p>Selecciona un grupo de la barra lateral</p>
+    </div>
+
+    <div class="tracks-wrap" id="tracksWrap" style="display:none">
+      <div class="tracks-header">
+        <div class="tracks-header-text">
+          <span class="tracks-modalidad-badge" id="tracksModalidad"></span>
+          <h1 class="tracks-grupo-nombre" id="tracksGrupoNombre"></h1>
+          <p class="tracks-count" id="tracksCount"></p>
+        </div>
+        <button class="btn-play-all" id="btnPlayAll">▶ Reproducir todo</button>
+      </div>
+
+      <ol class="track-list" id="trackList">
+        <!-- Relleno dinámico -->
+      </ol>
+    </div>
+
+  </main>
+
+</div><!-- .audios-layout -->
+
+<!-- ── Player sticky ──────────────────────────────────────────────── -->
+<div class="audio-player" id="audioPlayer" style="display:none">
+
+  <div class="player-info">
+    <div class="player-emoji" id="playerEmoji">🎵</div>
+    <div class="player-meta">
+      <span class="player-titulo" id="playerTitulo">—</span>
+      <span class="player-grupo" id="playerGrupo">—</span>
+    </div>
+  </div>
+
+  <div class="player-center">
+    <div class="player-controls">
+      <button class="player-btn" id="btnPrev" title="Anterior">⏮</button>
+      <button class="player-btn player-btn-play" id="btnPlayPause" title="Play/Pausa">▶</button>
+      <button class="player-btn" id="btnNext" title="Siguiente">⏭</button>
+    </div>
+    <div class="player-progress-wrap">
+      <span class="player-time" id="playerCurrentTime">0:00</span>
+      <div class="player-progress-bar" id="progressBar">
+        <div class="player-progress-fill" id="progressFill"></div>
+      </div>
+      <span class="player-time" id="playerDuration">0:00</span>
+    </div>
+  </div>
+
+  <div class="player-volume-wrap">
+    <span class="player-vol-icon">🔊</span>
+    <input type="range" class="player-volume" id="playerVolume"
+           min="0" max="1" step="0.05" value="0.8"/>
+  </div>
+
+</div>
+
+<!-- Elemento audio nativo oculto -->
+<audio id="audioElement" preload="metadata"></audio>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/audios.js"></script>
+{% endblock %}

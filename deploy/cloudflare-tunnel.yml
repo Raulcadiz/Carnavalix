@@ -1,0 +1,28 @@
+# ══════════════════════════════════════════════════════════════════
+# CarnavalPlay — Cloudflare Tunnel (mejor opción que ngrok)
+#
+# VENTAJAS sobre ngrok:
+#   - URL permanente y gratuita
+#   - Sin límite de conexiones
+#   - HTTPS automático
+#   - Funciona detrás de NAT/CGNAT
+#
+# INSTALACIÓN:
+#   1. Descarga cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/
+#   2. Autentícate: cloudflared tunnel login
+#   3. Crea el túnel: cloudflared tunnel create carnavalplay
+#   4. Copia el TunnelID aquí abajo
+#   5. Crea el DNS: cloudflared tunnel route dns carnavalplay tudominio.noip.com
+#   6. Arrancar: cloudflared tunnel --config deploy/cloudflare-tunnel.yml run
+# ══════════════════════════════════════════════════════════════════
+
+tunnel: <TU_TUNNEL_ID_AQUI>
+credentials-file: C:\Users\<TU_USUARIO>\.cloudflared\<TU_TUNNEL_ID_AQUI>.json
+
+ingress:
+  # Ruta principal de CarnavalPlay
+  - hostname: tudominio.noip.me
+    service: http://localhost:5000
+
+  # Cualquier otra petición → error
+  - service: http_status:404
