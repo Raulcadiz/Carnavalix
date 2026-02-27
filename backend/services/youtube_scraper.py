@@ -14,7 +14,12 @@ from typing import Optional
 
 # Invocar yt-dlp a través del intérprete activo para evitar problemas de PATH en Windows
 _YTDLP = [sys.executable, "-m", "yt_dlp"]
-_YTDLP_PLAYER = ["--extractor-args", "youtube:player_client=android,web"]
+_YTDLP_PLAYER = [
+    "--extractor-args", "youtube:player_client=android,web",
+    # User-Agent de Android para evitar deteccion anti-bot en el servidor
+    "--user-agent",
+    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36",
+]
 
 try:
     from googleapiclient.discovery import build

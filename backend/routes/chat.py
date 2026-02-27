@@ -78,6 +78,7 @@ def on_mensaje(data):
         usuario_id = None
 
     # Guardar en DB
+    payload = None
     db = SessionLocal()
     try:
         msg = MensajeChat(
@@ -90,10 +91,23 @@ def on_mensaje(data):
         db.add(msg)
         db.commit()
         payload = msg.to_dict()
+    except Exception as e:
+        print(f"[Chat] Error guardando mensaje en DB: {e}")
+        db.rollback()
+        # Emitir igualmente aunque no se haya persistido
+        from datetime import datetime as _dt
+        payload = {
+            "usuario": nombre,
+            "contenido": contenido,
+            "tipo": "user",
+            "sala": sala,
+            "hora": _dt.utcnow().strftime("%H:%M"),
+        }
     finally:
         db.close()
 
-    emit("mensaje", payload, to=sala)
+    if payload:
+        emit("mensaje", payload, to=sala)
 
 
 # ─── Bot de carnaval aleatorio ────────────────────────────────────────────────

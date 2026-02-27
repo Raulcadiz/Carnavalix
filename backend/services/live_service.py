@@ -149,14 +149,16 @@ def _monitor_loop():
             db = SessionLocal()
             try:
                 estado = db.query(EstadoLive).filter(EstadoLive.id == 1).first()
-                if estado and estado.youtube_id and estado.duracion > 0:
-                    elapsed = int((datetime.utcnow() - estado.started_at).total_seconds())
-                    # Avanzar si el vídeo ha terminado (con 15s de margen)
-                    if elapsed >= estado.duracion + 15:
-                        print(f"[Live] Vídeo terminado ({elapsed}s / {estado.duracion}s). Avanzando...")
-                        avanzar_al_siguiente()
+                if estado and estado.youtube_id:
+                    if estado.duracion and estado.duracion > 0:
+                        elapsed = int((datetime.utcnow() - estado.started_at).total_seconds())
+                        # Avanzar si el vídeo ha terminado (con 15s de margen)
+                        if elapsed >= estado.duracion + 15:
+                            print(f"[Live] Vídeo terminado ({elapsed}s / {estado.duracion}s). Avanzando...")
+                            avanzar_al_siguiente()
+                    # else: duracion=0 o desconocida → dejar el vídeo actual sin cambiar
                 else:
-                    # Sin registro, sin youtube_id o duración 0 → intentar iniciar
+                    # Sin registro o sin youtube_id → intentar iniciar
                     avanzar_al_siguiente()
             finally:
                 db.close()

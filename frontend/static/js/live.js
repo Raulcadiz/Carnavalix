@@ -16,8 +16,23 @@ document.addEventListener("DOMContentLoaded", iniciarLive);
 
 // ── Arranque ─────────────────────────────────────────────────────────────────
 async function iniciarLive() {
+  // El chat siempre arranca, aunque no haya vídeo en el canal
+  iniciarChat("live");
+
   const estado = await obtenerEstado();
-  if (!estado) return;
+  if (!estado) {
+    // Sin vídeo: reintentar en 15 s por si el monitor aún no ha arrancado
+    setTimeout(async () => {
+      const e2 = await obtenerEstado();
+      if (e2) {
+        _estadoActual = e2;
+        cargarPlayer(e2.youtube_id, e2.segundos_transcurridos);
+        actualizarInfoPanel(e2);
+        _syncInterval = setInterval(sincronizarEstado, SYNC_INTERVAL_MS);
+      }
+    }, 15000);
+    return;
+  }
 
   _estadoActual = estado;
   cargarPlayer(estado.youtube_id, estado.segundos_transcurridos);
@@ -25,9 +40,6 @@ async function iniciarLive() {
 
   // Polling de sincronización
   _syncInterval = setInterval(sincronizarEstado, SYNC_INTERVAL_MS);
-
-  // Chat lateral
-  iniciarChat("live");
 }
 
 // ── Player ────────────────────────────────────────────────────────────────────
@@ -114,13 +126,10 @@ function iniciarChat(sala) {
     })
     .catch(() => {});
 
-  // Unirse a la sala cuando el socket conecte (o ya está conectado)
+  // Unirse a la sala al conectar y en cada reconexión
   const unirse = () => _socket.emit("unirse", { sala, nombre: obtenerNombreChat() });
-  if (_socket.connected) {
-    unirse();
-  } else {
-    _socket.once("connect", unirse);
-  }
+  _socket.on("connect", unirse);   // también maneja reconexiones automáticas
+  if (_socket.connected) unirse(); // si ya estaba conectado, unirse ahora mismo
 
   // Escuchar mensajes nuevos
   _socket.on("mensaje", (msg) => {
