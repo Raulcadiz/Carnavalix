@@ -9,6 +9,9 @@ from backend.main import socketio
 from backend.database import SessionLocal
 from backend.models import MensajeChat, Letra, Video
 
+# Alias para acceder al SID del socket en handlers (Flask pone el SID en request.sid)
+_get_sid = lambda: getattr(request, "sid", None)
+
 bp = Blueprint("chat", __name__)
 
 # Intervalo en segundos entre mensajes del bot (5 minutos)
@@ -107,7 +110,14 @@ def on_mensaje(data):
         db.close()
 
     if payload:
-        emit("mensaje", payload, to=sala)
+        # 1) Enviar directamente al emisor (garantiza que siempre vea su propio mensaje)
+        emit("mensaje", payload)
+        # 2) Broadcast al resto de la sala (excluyendo al emisor para evitar duplicados)
+        sid = _get_sid()
+        if sid:
+            socketio.emit("mensaje", payload, to=sala, skip_sid=sid)
+        else:
+            socketio.emit("mensaje", payload, to=sala)
 
 
 # ─── Bot de carnaval aleatorio ────────────────────────────────────────────────
