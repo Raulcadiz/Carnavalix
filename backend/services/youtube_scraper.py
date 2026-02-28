@@ -14,11 +14,18 @@ from typing import Optional
 
 # Invocar yt-dlp a través del intérprete activo para evitar problemas de PATH en Windows
 _YTDLP = [sys.executable, "-m", "yt_dlp"]
+
+# Args para extracción de metadatos de vídeo individual (necesita player client)
 _YTDLP_PLAYER = [
     "--extractor-args", "youtube:player_client=android,web",
-    # User-Agent de Android para evitar deteccion anti-bot en el servidor
     "--user-agent",
     "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36",
+]
+
+# Args para listar canales/playlists (NO usar player_client — interfiere con youtube:tab)
+_YTDLP_PLAYLIST = [
+    "--no-warnings",
+    "--ignore-errors",
 ]
 
 try:
@@ -379,6 +386,112 @@ def buscar_videos(
 # Scraping de canal completo
 # ---------------------------------------------------------------------------
 
+def _listar_videos_canal_api(channel_url: str, max_videos: int = 200) -> list:
+    """
+    Lista IDs de vídeos de un canal usando YouTube Data API v3.
+    Devuelve lista de youtube_ids o [] si falla.
+    """
+    try:
+        yt = _build_client()
+        identificador = extraer_channel_id_de_url(channel_url)
+        if not identificador:
+            return []
+
+        # Resolver handle/@nombre a channelId (UCxxx)
+        if identificador.startswith("UC"):
+            channel_id = identificador
+        elif identificador.startswith("@"):
+            resp = yt.channels().list(
+                part="id", forHandle=identificador.lstrip("@")
+            ).execute()
+            items = resp.get("items", [])
+            if not items:
+                return []
+            channel_id = items[0]["id"]
+        else:
+            resp = yt.channels().list(
+                part="id", forUsername=identificador
+            ).execute()
+            items = resp.get("items", [])
+            if not items:
+                return []
+            channel_id = items[0]["id"]
+
+        # Obtener playlist "uploads" del canal
+        resp = yt.channels().list(
+            part="contentDetails", id=channel_id
+        ).execute()
+        uploads_id = (
+            resp["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        )
+
+        # Paginar la playlist hasta max_videos
+        ids = []
+        page_token = None
+        while len(ids) < max_videos:
+            kwargs = dict(
+                part="snippet",
+                playlistId=uploads_id,
+                maxResults=min(50, max_videos - len(ids)),
+            )
+            if page_token:
+                kwargs["pageToken"] = page_token
+            resp = yt.playlistItems().list(**kwargs).execute()
+            for item in resp.get("items", []):
+                vid_id = item["snippet"]["resourceId"]["videoId"]
+                ids.append(vid_id)
+            page_token = resp.get("nextPageToken")
+            if not page_token:
+                break
+
+        print(f"[Canal][API] {len(ids)} vídeos encontrados")
+        return ids
+
+    except Exception as e:
+        print(f"[Canal][API] Error listando canal: {e}")
+        return []
+
+
+def _listar_videos_canal_ytdlp(channel_url: str, max_videos: int = 200) -> list:
+    """
+    Lista IDs de vídeos de un canal usando yt-dlp.
+    Usa _YTDLP_PLAYLIST (sin player_client) para evitar fallos con youtube:tab.
+    Acepta resultados parciales aunque el proceso acabe con error.
+    """
+    result = subprocess.run(
+        _YTDLP + _YTDLP_PLAYLIST + [
+            channel_url,
+            "--dump-json",
+            "--flat-playlist",
+            "--skip-download",
+            "--yes-playlist",
+            "--playlist-end", str(max_videos),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+
+    ids = []
+    for line in result.stdout.strip().splitlines():
+        if not line.strip():
+            continue
+        try:
+            data = json.loads(line)
+            vid_id = data.get("id") or data.get("youtube_id")
+            if vid_id:
+                ids.append(vid_id)
+        except json.JSONDecodeError:
+            continue
+
+    if result.returncode != 0 and not ids:
+        print(f"[Canal][yt-dlp] Error sin resultados: {result.stderr[:300]}")
+    elif result.returncode != 0:
+        print(f"[Canal][yt-dlp] Advertencias pero se obtuvieron {len(ids)} IDs")
+
+    return ids
+
+
 def scrapear_canal_coac(channel_url: str, max_videos: int = 200) -> dict:
     """
     Scracea todos los videos de un canal de YouTube.
@@ -388,6 +501,7 @@ def scrapear_canal_coac(channel_url: str, max_videos: int = 200) -> dict:
       - https://www.youtube.com/channel/UCxxxxxxxx
       - https://www.youtube.com/c/NombreCanal
 
+    Usa YouTube API si hay clave configurada; si no, yt-dlp.
     Guarda los videos en DB y devuelve un resumen con nuevos/existentes/errores.
     """
     print(f"[Canal] Scrapeando canal: {channel_url}")
@@ -397,35 +511,17 @@ def scrapear_canal_coac(channel_url: str, max_videos: int = 200) -> dict:
     errores = 0
 
     try:
-        result = subprocess.run(
-            _YTDLP + _YTDLP_PLAYER + [
-                channel_url,
-                "--dump-json",
-                "--flat-playlist",
-                "--skip-download",
-                "--yes-playlist",
-                "--playlist-end", str(max_videos),
-            ],
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
+        # 1. Obtener lista de IDs (API preferida, yt-dlp como fallback)
+        if config.YOUTUBE_API_KEY:
+            ids_canal = _listar_videos_canal_api(channel_url, max_videos)
+            if not ids_canal:
+                print("[Canal] API sin resultados, usando yt-dlp...")
+                ids_canal = _listar_videos_canal_ytdlp(channel_url, max_videos)
+        else:
+            ids_canal = _listar_videos_canal_ytdlp(channel_url, max_videos)
 
-        if result.returncode != 0:
-            print(f"[Canal] yt-dlp error: {result.stderr[:300]}")
+        if not ids_canal:
             return {"nuevos": 0, "existentes": 0, "errores": 1, "canal": channel_url}
-
-        ids_canal = []
-        for line in result.stdout.strip().splitlines():
-            if not line.strip():
-                continue
-            try:
-                data = json.loads(line)
-                vid_id = data.get("id") or data.get("youtube_id")
-                if vid_id:
-                    ids_canal.append(vid_id)
-            except json.JSONDecodeError:
-                continue
 
         print(f"[Canal] Encontrados {len(ids_canal)} videos en el canal")
 
